@@ -1,0 +1,688 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>博客文章管理系统</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+
+    :root {
+      --primary: #4361ee;
+      --secondary: #3f37c9;
+      --success: #4cc9f0;
+      --danger: #f72585;
+      --light: #f8f9fa;
+      --dark: #212529;
+      --gray: #6c757d;
+      --border: #dee2e6;
+    }
+
+    body {
+      background-color: #f5f7fb;
+      color: var(--dark);
+      line-height: 1.6;
+    }
+
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+
+    header {
+      background: linear-gradient(135deg, var(--primary), var(--secondary));
+      color: white;
+      padding: 20px 0;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+      border-radius: 0 0 10px 10px;
+      margin-bottom: 30px;
+    }
+
+    .header-content {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    h1 {
+      font-size: 2.2rem;
+      font-weight: 700;
+    }
+
+    .search-bar {
+      display: flex;
+      gap: 10px;
+      margin: 20px 0;
+    }
+
+    input,
+    select,
+    textarea,
+    button {
+      padding: 12px 15px;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      font-size: 1rem;
+    }
+
+    input:focus,
+    select:focus,
+    textarea:focus {
+      outline: none;
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(67, 97, 238, 0.2);
+    }
+
+    button {
+      background-color: var(--primary);
+      color: white;
+      border: none;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      font-weight: 600;
+    }
+
+    button:hover {
+      background-color: var(--secondary);
+      transform: translateY(-2px);
+    }
+
+    .btn-danger {
+      background-color: var(--danger);
+    }
+
+    .btn-danger:hover {
+      background-color: #d60a6e;
+    }
+
+    .btn-success {
+      background-color: var(--success);
+    }
+
+    .btn-success:hover {
+      background-color: #2bbde0;
+    }
+
+    .card {
+      background: white;
+      border-radius: 10px;
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+      overflow: hidden;
+      margin-bottom: 25px;
+      transition: transform 0.3s ease;
+    }
+
+    .card:hover {
+      transform: translateY(-5px);
+    }
+
+    .card-header {
+      background: linear-gradient(to right, var(--primary), var(--success));
+      color: white;
+      padding: 15px 20px;
+      font-size: 1.2rem;
+      font-weight: 600;
+      display: flex;
+      justify-content: space-between
+    }
+
+    .card-body {
+      padding: 20px;
+    }
+
+    .form-group {
+      margin-bottom: 20px;
+    }
+
+    label {
+      display: block;
+      margin-bottom: 8px;
+      font-weight: 500;
+      color: var(--dark);
+    }
+
+    .article-list {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+      gap: 25px;
+    }
+
+    .article-item {
+      background: white;
+      border-radius: 10px;
+      overflow: hidden;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.08);
+    }
+
+    .article-image {
+      height: 180px;
+      width: 100%;
+      object-fit: cover;
+      border-bottom: 3px solid var(--primary);
+    }
+
+    .article-content {
+      padding: 20px;
+    }
+
+    .article-title {
+      font-size: 1.3rem;
+      margin-bottom: 10px;
+      color: var(--primary);
+    }
+
+    .article-meta {
+      display: flex;
+      justify-content: space-between;
+      color: var(--gray);
+      font-size: 0.9rem;
+      margin-bottom: 15px;
+    }
+
+    .article-actions {
+      display: flex;
+      gap: 10px;
+      margin-top: 15px;
+    }
+
+    .action-btn {
+      flex: 1;
+      text-align: center;
+      padding: 8px;
+      border-radius: 5px;
+      font-size: 0.9rem;
+    }
+
+    /* 新增文章表单弹层 */
+    .modal {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.5);
+      z-index: 1000;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .modal.active {
+      display: flex;
+    }
+
+    .modal-content {
+      background: white;
+      width: 90%;
+      max-width: 600px;
+      border-radius: 10px;
+      overflow: hidden;
+      animation: modalOpen 0.3s ease;
+    }
+
+    @keyframes modalOpen {
+      from {
+        opacity: 0;
+        transform: translateY(-50px);
+      }
+
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .modal-header {
+      background: var(--primary);
+      color: white;
+      padding: 15px 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .close-modal {
+      background: none;
+      border: none;
+      color: white;
+      font-size: 1.5rem;
+      cursor: pointer;
+    }
+
+    .toast {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      padding: 15px 25px;
+      border-radius: 8px;
+      color: white;
+      font-weight: 500;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+      display: none;
+      z-index: 1100;
+    }
+
+    .toast.success {
+      background: var(--success);
+    }
+
+    .toast.error {
+      background: var(--danger);
+    }
+
+    .empty-state {
+      text-align: center;
+      padding: 40px 20px;
+      color: var(--gray);
+    }
+
+    .empty-state i {
+      font-size: 3rem;
+      margin-bottom: 15px;
+      color: #ced4da;
+    }
+
+    @media (max-width: 768px) {
+      .header-content {
+        flex-direction: column;
+        gap: 15px;
+      }
+
+      .search-bar {
+        flex-direction: column;
+      }
+
+      .article-list {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+<script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+
+<body>
+  <div id="app">
+    <header>
+      <div class="container">
+        <div class="header-content">
+          <h1><i class="fas fa-blog"></i> 博客文章管理系统</h1>
+          <button @click="addFormData">
+            <i class="fas fa-plus"></i> 添加新文章
+          </button>
+        </div>
+      </div>
+    </header>
+
+    <div class="container">
+      <div class="search-bar">
+        <input type="text" @keypress.enter="handleSearch" v-model="keyword" placeholder="搜索文章标题..." />
+        <select v-model="selectedCategory">
+          <option value="">所有分类</option>
+          <option :value="item.id" v-for="item in articles_cate" :key="item.id">{{item.cate_name}}</option>
+        </select>
+        <button @click="handleSearch"><i class="fas fa-search"></i> 搜索</button>
+      </div>
+
+      <div class="card">
+        <div class="card-header">文章列表
+          <div id='button_box'>
+            <button id='lastPage' :disabled="page <= 1" @click="lastPage">上一页</button>
+            <button id='nextPage' :disabled="page >= totalPages" @click="nextPage">下一页</button>
+          </div>
+        </div>
+        <div class="card-body">
+          <div class="article-list">
+            <div class="article-item" v-for="item in articles" :key="item.id">
+              <img :src="`http://localhost:3333${item.img}`" alt="示例封面" class="article-image" />
+              <div class="article-content">
+                <h3 class="article-title">{{item.title}}</h3>
+                <div class="article-meta">
+                  <span>{{item.cate?.cate_name}}</span>
+                  <span>{{formatDate(item.date)}}</span>
+                </div>
+                <p>
+                  {{item.text}}...
+                </p>
+                <div class="article-actions">
+                  <button class="action-btn" style="background: #ffc107; color: #212529"
+                    @click="uploadFormData(item.id)">
+                    <i class="fas fa-edit"></i> 编辑
+                  </button>
+                  <button class="action-btn" @click="delArticle(item.id)" style="background: #dc3545; color: white">
+                    <i class="fas fa-trash"></i> 删除
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 添加新文章表单弹层 -->
+    <div class="modal" id="addArticleModal" :class="{ active: showModal }">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h2>{{modalTitle}}</h2>
+          <button class="close-modal" @click='closeFormData'>
+            &times;
+          </button>
+        </div>
+        <div class="card-body">
+          <div>
+            <div class="form-group">
+              <label for="title">标题</label>
+              <input type="text" id="title" placeholder="请输入文章标题" v-model="formData.title" />
+            </div>
+            <div class="form-group">
+              <label for="content">内容</label>
+              <textarea id="content" rows="5" placeholder="请输入文章内容" v-model="formData.text"></textarea>
+            </div>
+            <div class="form-group">
+              <label for="category">分类</label>
+              <select id="category " v-model="formData.cate_id">
+                <option value="">请选择分类</option>
+                <option :value="item.id" v-for="item in articles_cate" :key="item.id">{{item.cate_name}}</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label for="image">封面图片</label>
+              <input type="file" id="image" accept="image/*" @change="FileChange" />
+              <div v-if="formData.image" class="file-name">
+                已选择: {{ formData.image.name }}
+              </div>
+            </div>
+            <button type="submit" class="btn-success" style="width: 100%" @click="uploadArticle">
+              <i class="fas fa-save"></i> 保存文章
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 通知提示占位 -->
+    <div class="toast"></div>
+  </div>
+
+  <script>
+    const { createApp, ref, onMounted } = Vue;
+
+    createApp({
+      setup() {
+        let showModal = ref(false);
+        // 弹窗标题
+        let modalTitle = ref('添加新文章');
+        // 表单数据
+        let formData = ref({
+          id: null,
+          title: '',
+          text: '',
+          cate_id: '',
+          image: null
+        });
+        // 文章列表
+        let articles = ref([]);
+        // 文章分类
+        let articles_cate = ref([])
+        // 当前页
+        let page = ref(1);
+        // 每页数量       
+        let pageSize = ref(3);
+        // 总页数
+        let totalPages = ref(1);
+        // 总记录数   
+        let total = ref(0);
+        // 搜索关键词        
+        let keyword = ref('');
+        // 选中的文章分类
+        let selectedCategory = ref('');
+
+        // 获取服务器数据
+        const loadDataFromServer = async () => {
+
+          let { data } = await axios({
+            method: 'GET',
+            url: 'http://localhost:3333/getArticles',
+            params: {
+              page: page.value,
+              pageSize: pageSize.value,
+              keyword: keyword.value,
+              cate_id: selectedCategory.value
+            }
+          })
+          if (data.code === 20000) {
+            articles.value = data.data;
+            articles_cate.value = data.categories
+            totalPages.value = data.totalPages;
+            console.log(articles_cate.value);
+
+            console.log('获取成功:', articles.value);
+          } else {
+            console.error('接口返回错误:', data.msg);
+          }
+
+        }
+        // 时间格式转换函数
+        const formatDate = (time) => {
+          if (!time) return '未知'
+          const date = new Date(time * 1000);
+          let year = date.getFullYear();
+          let month = date.getMonth() + 1;
+          let day = date.getDate();
+          return `${year}/${month}/${day}`
+        }
+
+        // 添加表单
+        const addFormData = () => {
+          formData.value = {
+            id: null,
+            title: '',
+            text: '',
+            cate_id: '',
+            image: null
+          }
+          modalTitle.value = '添加新文章',
+            showModal.value = true;
+
+          const fileInput = document.getElementById('image');
+          if (fileInput) fileInput.value = '';
+        }
+
+        // 编辑表单
+        const uploadFormData = async (id) => {
+          try {
+            id = Number(id)
+
+            let { data } = await axios({
+              method: 'get',
+              url: 'http://localhost:3333/getArticleById',
+              params: {
+                id
+              }
+            })
+            console.log(data.code);
+
+            if (data.code === 20000) {
+              console.log(data.data);
+
+              formData.value = {
+                id: data.data.id,
+                title: data.data.title,
+                text: data.data.text,
+                cate_id: data.data.cate_id || '',
+                image: null
+              }
+              modalTitle.value = '编辑文章'
+              showModal.value = true;
+            }
+          }
+          catch (e) {
+            console.log('获取文章失败' + e)
+            alert('获取文章失败');
+          }
+
+        }
+
+        // 关闭表单
+        const closeFormData = () => {
+          showModal.value = false;
+          // 关闭重置表单
+          formData.value = {
+            id: null,
+            title: '',
+            text: '',
+            cate_id: '',
+            image: null
+          };
+        };
+
+        // 文件选择
+        const FileChange = (e) => {
+          formData.value.image = e.target.files[0];
+          console.log('选择的文件:', formData.value.image);
+        };
+
+        // 文章上传
+        const uploadArticle = async () => {
+          const uploadData = new FormData();
+          uploadData.append('title', formData.value.title)
+          uploadData.append('text', formData.value.text)
+          uploadData.append('cate_id', formData.value.cate_id)
+          uploadData.append('img', formData.value.image)
+
+          try {
+            let data
+            if (modalTitle.value == '编辑文章') {
+              data = await axios({
+                method: 'POST',
+                url: 'http://localhost:3333/updateArticle',
+                data: uploadData,
+                params: { id: formData.value.id }
+              })
+            }
+            else {
+              data = await axios({
+                method: 'POST',
+                url: 'http://localhost:3333/createArticle',
+                data: uploadData
+              })
+            }
+
+            if (data.data.code === 20000) {
+              alert('操作成功！')
+              loadDataFromServer()
+              closeFormData()
+            }
+
+          }
+          catch (e) {
+            alert('操作失败！')
+            console.log(e.error);
+          }
+
+
+        }
+
+
+
+
+
+
+        // 删除
+        const delArticle = async (id) => {
+          try {
+            if (!confirm('确定要删除这篇文章吗？')) return;
+            let { data } = await axios({
+              method: 'delete',
+              url: 'http://localhost:3333/delArticle',
+              params: {
+                id: id
+              }
+            })
+            if (data.code === 20000) {
+              loadDataFromServer();
+            }
+            else {
+              alert(data.msg || '删除失败');
+            }
+          } catch (error) {
+            console.error('删除失败:', error);
+            alert('删除失败，请稍后重试');
+          }
+        }
+
+        // 搜索
+        const handleSearch = () => {
+          page.value = 1;
+          loadDataFromServer();
+          cleanSearch()
+
+        };
+
+        // 重置
+        const cleanSearch = () => {
+          keyword.value = '';
+          selectedCategory.value = '';
+          page.value = 1;
+        }
+
+
+        // 上一页
+        const lastPage = () => {
+          if (page.value > 1) {
+            page.value--
+            loadDataFromServer()
+          }
+        }
+
+        // 下一页
+        const nextPage = () => {
+          if (page.value < totalPages.value) {
+            page.value++
+            loadDataFromServer()
+          }
+        }
+
+        onMounted(() => {
+          loadDataFromServer();
+        });
+
+        return {
+          articles,
+          articles_cate,
+          page,
+          pageSize,
+          keyword,
+          totalPages,
+          selectedCategory,
+          formData,
+          modalTitle,
+          showModal,
+          loadDataFromServer,
+          lastPage,
+          nextPage,
+          handleSearch,
+          delArticle,
+          formatDate,
+          addFormData,
+          closeFormData,
+          FileChange,
+          uploadFormData,
+          uploadArticle
+        };
+      }
+    })
+      .mount('#app')
+  </script>
+</body>
+
+</html>
